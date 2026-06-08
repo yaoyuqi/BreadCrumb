@@ -1,3 +1,4 @@
+using Library.Dto;
 using Library.Entities;
 using Library.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -72,9 +73,9 @@ app.MapGet("api/books", async (int? page, int? pageSize, string? name, AppDbCont
 
 }).WithName("GetBooks").WithTags("Books");
 
-app.MapPost("api/books", async (string title, string owner, string? author, string? isbn, DateTime? publishedDate, AppDbContext db) =>
+app.MapPost("api/books", async (AddBookRequest request, AppDbContext db) =>
 {
-    var existingBook = await db.Books.FirstOrDefaultAsync(b => b.Title == title && b.Owner == owner);
+    var existingBook = await db.Books.FirstOrDefaultAsync(b => b.Title == request.title && b.Owner == request.owner);
 
     if (existingBook != null)
     {
@@ -84,11 +85,11 @@ app.MapPost("api/books", async (string title, string owner, string? author, stri
 
     var book = new Book
     {
-        Title = title,
-        Owner = owner,
-        Author = author,
-        Isbn = isbn,
-        PublishedDate = publishedDate,
+        Title = request.title,
+        Owner = request.owner,
+        Author = request.author,
+        Isbn = request.isbn,
+        PublishedDate = request.publishedDate,
         IsAvailable = true
     };
 
@@ -99,14 +100,14 @@ app.MapPost("api/books", async (string title, string owner, string? author, stri
 });
 
 
-app.MapPost("api/books/{id}", async (int id, string operation, string? borrowerName, AppDbContext db) =>
+app.MapPut("api/books/{id}", async (int id, BookOperationRequest request, AppDbContext db) =>
 {
-    if (operation != "borrow" && operation != "return")
+    if (request.operation != "borrow" && request.operation != "return")
     {
         return Results.BadRequest("Invalid operation. Use 'borrow' or 'return'.");
     }
 
-    if (operation == "borrow" && string.IsNullOrEmpty(borrowerName))
+    if (request.operation == "borrow" && string.IsNullOrEmpty(request.borrowerName))
     {
         return Results.BadRequest("Borrower name is required for borrowing a book.");
     }
@@ -117,7 +118,7 @@ app.MapPost("api/books/{id}", async (int id, string operation, string? borrowerN
         return Results.NotFound("Book not found.");
     }
 
-    if (operation == "borrow")
+    if (request.operation == "borrow")
     {
         if (!book.IsAvailable)
         {
@@ -127,13 +128,13 @@ app.MapPost("api/books/{id}", async (int id, string operation, string? borrowerN
         var borrowRecord = new BookBorrow
         {
             BookId = book.Id,
-            BorrowerName = borrowerName!,
+            BorrowerName = request.borrowerName!,
             BorrowedTime = DateTime.UtcNow
         };
 
         db.BookBorrows.Add(borrowRecord);
     }
-    else if (operation == "return")
+    else if (request.operation == "return")
     {
         if (book.IsAvailable)
         {
