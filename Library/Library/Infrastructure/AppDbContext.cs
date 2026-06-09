@@ -22,7 +22,6 @@ namespace Library.Infrastructure
             modelBuilder.Entity<BookBorrow>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.BorrowerName).IsRequired();
                 entity.HasOne(e => e.Book).WithMany().HasForeignKey(e => e.BookId);
             });
         }

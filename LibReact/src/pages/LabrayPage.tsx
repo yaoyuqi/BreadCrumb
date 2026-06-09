@@ -109,7 +109,7 @@ function Library() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ operation, borrowerName: "Jeff" }),
+      body: JSON.stringify({ operation }),
     });
 
     if (!response.ok) {

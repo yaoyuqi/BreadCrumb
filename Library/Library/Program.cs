@@ -1,6 +1,7 @@
 using Library.Dto;
 using Library.Entities;
 using Library.Infrastructure;
+using Library.Infrastructure.Seeder;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,7 @@ var app = builder.Build();
 var scoped = app.Services.CreateScope();
 var context = scoped.ServiceProvider.GetRequiredService<AppDbContext>();
 await context.Database.MigrateAsync();
+await LibrarySeeder.SeedAsync(context);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -107,10 +109,6 @@ app.MapPut("api/books/{id}", async (int id, BookOperationRequest request, AppDbC
         return Results.BadRequest("Invalid operation. Use 'borrow' or 'return'.");
     }
 
-    if (request.operation == "borrow" && string.IsNullOrEmpty(request.borrowerName))
-    {
-        return Results.BadRequest("Borrower name is required for borrowing a book.");
-    }
 
     var book = await db.Books.FindAsync(id);
     if (book == null)
@@ -128,7 +126,6 @@ app.MapPut("api/books/{id}", async (int id, BookOperationRequest request, AppDbC
         var borrowRecord = new BookBorrow
         {
             BookId = book.Id,
-            BorrowerName = request.borrowerName!,
             BorrowedTime = DateTime.UtcNow
         };
 
