@@ -98,7 +98,7 @@ function Library() {
 
   async function handlePageChange(newPage: number) {
     setPage(newPage);
-    const data = await fetchBooks(1, "");
+    const data = await fetchBooks(newPage, searchTerm);
     setBooks(data?.items ?? []);
     setTotalPage(data?.totalPage ?? 0);
   }
